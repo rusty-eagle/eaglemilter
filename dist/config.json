@@ -1,26 +1,27 @@
 {
   "dkim": {
+    "word": "",
     "action": "quarantine",
-    "message": "failed!"
+    "message": "dkim message"
   },
   "spf": {
+    "word": "",
     "action": "quarnatine",
-    "message": "whoops"
+    "message": "spf message"
   },
   "dmarc": {
+    "word": "",
     "action": "reject",
     "message": "failed dmarc"
   },
-  "custom": {
-    "rule1": {
-      "word": "test",
-      "action": "reject",
-      "message": "you failed"
-    },
-    "rule2": {
-      "word": "bacon",
-      "action": "quarantine",
-      "message": "you failed again"
-    }
+  "rule1": {
+    "word": "test",
+    "action": "reject",
+    "message": "rule1 message"
+  },
+  "rule2": {
+    "word": "bacon",
+    "action": "quarantine",
+    "message": "rule2 message"
   }
 }

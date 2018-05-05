@@ -11,9 +11,9 @@
 #include "Debugger.h"
 #include "strings.h"
 #include "usage.h"
-#include "json_tool.h"
 // Default initiators for policies
 #include "policies.h"
+#include "json_tool.h"
 #include "api.h"
 
 struct smfiDesc milter = {
@@ -89,20 +89,6 @@ int main( int argc, char ** argv ) {
 					exit( EX_USAGE );
 				}
 				break;
-			//case 'r':
-				//if( optarg == NULL ) {
-					//(void) fprintf( stderr, "%s\n", ILLEGAL_REJ );
-					//exit( EX_USAGE );
-				//}
-				//break;
-			//case 'a':
-				//if( optarg == NULL ) {
-					//(void) fprintf( stderr, "%s\n", ILLEGAL_ADD );
-					//exit( EX_USAGE );
-				//}
-				//add = optarg
-				//milter.xxfi_flags |= SMFIF_ADDRCPT
-				//break;
 			case 'h':
 			default:
 				usage( argv[0] );

@@ -29,14 +29,24 @@
 
 #include "json-parser/json.h"
 
-static void print_depth_shift(int depth) {
-        int j;
-        for (j=0; j < depth; j++) {
-                printf(" ");
-        }
-}
+static void load_config( json_value* value, int depth );
 
-static void process_value(json_value* value, int depth);
+static void set_policy( char * title, char * word, bool case_sensitive, int action, char * message ) {
+	struct Policy * new_policy;
+	new_policy = malloc( sizeof * new_policy );
+	if( new_policy == NULL ) {
+		logger( stderr, "Problem getting new policy memory.\n", NULL );
+	}
+	memset( new_policy, '\0', sizeof * new_policy );
+
+	new_policy->title = title;
+	new_policy->word = word;
+	new_policy->case_sensitive = case_sensitive;
+	new_policy->action = action;
+	new_policy->message = message;
+
+	free(new_policy);
+}
 
 static void process_object(json_value* value, int depth) {
         int length, x;
@@ -45,9 +55,33 @@ static void process_object(json_value* value, int depth) {
         }
         length = value->u.object.length;
         for (x = 0; x < length; x++) {
-                print_depth_shift(depth);
                 printf("object[%d].name = %s\n", x, value->u.object.values[x].name);
-                process_value(value->u.object.values[x].value, depth+1);
+
+		json_value * word = value->u.object.values[x].value->u.object.values[0].value;
+		json_value * action = value->u.object.values[x].value->u.object.values[1].value;
+		json_value * message = value->u.object.values[x].value->u.object.values[2].value;
+
+		if(
+				strncmp( value->u.object.values[x].name, "word", 4 ) == 0 ||
+				strncmp( value->u.object.values[x].name, "action", 6 ) == 0 ||
+				strncmp( value->u.object.values[x].name, "message", 7 ) == 0
+		  )
+			continue;
+
+		int ACTION = 0;
+		if( action != NULL ) {
+			if( strncmp(action->u.string.ptr,"accept", 6) == 0 ) {
+				ACTION = ACCEPT;
+			} else if( strncmp(action->u.string.ptr,"reject", 6) == 0 ) {
+				ACTION = REJECT;
+			} else if( strncmp(action->u.string.ptr,"junk", 4) == 0 ) {
+				ACTION = JUNK;
+			}
+		}
+
+		set_policy( value->u.object.values[x].name, word->u.string.ptr, FALSE, ACTION, message->u.string.ptr );
+
+                load_config(value->u.object.values[x].value, depth+1);
         }
 }
 
@@ -59,18 +93,16 @@ static void process_array(json_value* value, int depth) {
         length = value->u.array.length;
         printf("array\n");
         for (x = 0; x < length; x++) {
-                process_value(value->u.array.values[x], depth);
+                load_config(value->u.array.values[x], depth);
         }
 }
 
-static void process_value(json_value* value, int depth) {
-        if (value == NULL) {
-                return;
-        }
-        if (value->type != json_object) {
-                print_depth_shift(depth);
-        }
-        switch (value->type) {
+static void load_config( json_value* value, int depth ) {
+	if( value == NULL ) {
+		fprintf( stderr, "Problem loading Config values!\n" );
+		exit( EX_SOFTWARE );
+	}
+	switch( value-> type ) {
 		case json_null:
 			printf("none\n");
 			break;
@@ -90,7 +122,7 @@ static void process_value(json_value* value, int depth) {
                         printf("double: %f\n", value->u.dbl);
                         break;
                 case json_string:
-                        printf("string: %s\n", value->u.string.ptr);
+			printf("string: %s\n", value->u.string.ptr);
                         break;
                 case json_boolean:
                         printf("bool: %d\n", value->u.boolean);
@@ -148,7 +180,7 @@ static int validate_config (char * filename ) {
 		logger(stdout, "Configuration file is parsable\n", NULL);
 	}
 
-        //process_value(value, 0);
+	load_config(value,0);
 
         json_value_free(value);
         free(file_contents);
